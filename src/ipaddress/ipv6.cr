@@ -1,4 +1,5 @@
 require "./prefix"
+require "socket"
 
 module IPAddress
   # Class `IPAddress::IPv6` is used to handle IPv6 type addresses.
@@ -66,18 +67,6 @@ module IPAddress
       !!(REGEXP =~ addr)
     end
 
-    # Extract 16 bit groups from a string.
-    def self.groups(addr : String) : Array(Int32)
-      if addr =~ /^(.*)::(.*)$/
-        l, r = [$1, $2].map &.split(':')
-      else
-        l, r = addr.split(':'), [] of String
-      end
-      {l, r}.each &.reject! &.empty?
-      groups = l + Array.new(8 - l.size - r.size, '0') + r
-      groups.map &.to_i(16)
-    end
-
     # Creates a new `IPv6` object from an unsigned 128 bits integer.
     #
     # ```
@@ -119,11 +108,11 @@ module IPAddress
     # ```
     def self.parse_data(data : Bytes, prefix = 128) : IPv6
       io = IO::Memory.new(data)
-      groups = [] of UInt16
+      groups = StaticArray(UInt16, 8).new(0)
       8.times do
         groups << io.read_bytes(UInt16, IO::ByteFormat::NetworkEndian)
       end
-      new "#{IN6FORMAT % groups}/#{prefix}"
+      new "#{IN6FORMAT % groups.to_a}/#{prefix}"
     end
 
     # Creates a new `IPv6` object from a number expressed in
@@ -178,9 +167,9 @@ module IPAddress
     #
     # ```
     # ip6 = IPAddress.new "2001:db8::8:800:200c:417a/64"
-    # ip6.groups # => [8193, 3512, 0, 0, 8, 2048, 8204, 16762]
+    # ip6.groups # => StaticArray[8193, 3512, 0, 0, 8, 2048, 8204, 16762]
     # ```
-    getter groups : Array(Int32)
+    getter groups : StaticArray(UInt16, 8)
 
     # Returns an instance of the prefix object.
     #
@@ -241,18 +230,14 @@ module IPAddress
         ip, netmask = addr, netmask || 128
       end
 
-      if ip =~ /:.+\./
-        raise ArgumentError.new "Please use #{self.class}::Mapped for IPv6 mapped addresses"
-      end
+      v6_fields = Socket::IPAddress.parse_v6_fields?(ip)
 
-      unless self.class.valid?(ip)
-        raise ArgumentError.new "Invalid IP: #{ip}"
-      end
+      raise ArgumentError.new "Invalid IP: #{ip}" if v6_fields.nil?
 
       @prefix = Prefix128.new(netmask.to_i)
-      @groups = self.class.groups(ip)
-      @address = IN6FORMAT % @groups
-      @compressed = compress_address
+      @groups = v6_fields.not_nil!
+      @address = IN6FORMAT % @groups.to_a
+      @compressed = Socket::IPAddress.v6(v6_fields, 0).address
     end
 
     # Unlike its counterpart `#to_string` method, `#to_string_uncompressed`
@@ -323,16 +308,16 @@ module IPAddress
     # ```
     #
     # See also: `#groups`
-    def [](index : Int32) : Int32
+    def [](index : Int32) : UInt16
       @groups[index]
     end
 
     # Updates the 16-bits value specified at *index*.
     #
     # See also: `#groups`
-    def []=(index : Int32, value : Int32) : Nil
+    def []=(index : Int32, value : UInt16) : Nil
       @groups[index] = value
-      initialize "#{IN6FORMAT % @groups}/#{@prefix}"
+      initialize "#{IN6FORMAT % @groups.to_a}/#{@prefix}"
     end
 
     # Returns a base16 number representing the IPv6 address.
@@ -461,10 +446,17 @@ module IPAddress
     end
 
     # Returns `true` if the address is a mapped address.
-    #
-    # See `IPv6::Mapped` for more information.
     def mapped?
-      to_big_i >> 32 == 0xffff
+      @groups.to_slice[0..4].all?(&.zero?) && groups[5] == 0xffff
+    end
+
+    # Returns the IPv4 Address of a mapped address.
+    def ipv4
+      unless mapped?
+        raise ArgumentError.new("Not a v4-in-v6 mapped address: #{@address}")
+      end
+      v4_bytes = UInt8.slice(@groups[6] >> 8, @groups[6] & 0xff, @groups[7] >> 8, @groups[7] & 0xff)
+      IPv4.parse_data(v4_bytes)
     end
 
     # Checks if an `IPv6` address objects belongs
@@ -475,7 +467,7 @@ module IPAddress
     # ip.link_local? # => true
     # ```
     def link_local?
-      includes_self? "fe80::/64"
+      @groups[0] == 0xfe80
     end
 
     # Checks if an `IPv6` address objects belongs
@@ -610,7 +602,7 @@ module IPAddress
     def data : Bytes
       io = IO::Memory.new
       @groups.each do |group|
-        io.write_bytes group.to_u16, IO::ByteFormat::NetworkEndian
+        io.write_bytes group, IO::ByteFormat::NetworkEndian
       end
       io.to_slice
     end
