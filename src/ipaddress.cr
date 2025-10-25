@@ -17,7 +17,6 @@ module IPAddress
   # ```
   # ip = IPAddress::IPv4.new "172.16.10.1/24"
   # ip6 = IPAddress::IPv6.new "2001:db8::8:800:200c:417a/64"
-  # ip6_mapped = IPAddress::IPv6::Mapped.new "::ffff:172.16.10.1/128"
   # ```
   #
   # you can just use the `IPAddress.new` wrapper:
@@ -34,7 +33,6 @@ module IPAddress
   # ```
   # ip.class         # => IPAddress::IPv4
   # ip6.class        # => IPAddress::IPv6
-  # ip6_mapped.class # => IPAddress::IPv6::Mapped
   # ```
   #
   # See also `#parse`
@@ -58,7 +56,6 @@ module IPAddress
   # ```
   # ip.class         # => IPAddress::IPv4
   # ip6.class        # => IPAddress::IPv6
-  # ip6_mapped.class # => IPAddress::IPv6::Mapped
   # ```
   #
   # See also `#new`, `#ntoa`
@@ -66,8 +63,6 @@ module IPAddress
     case addr
     when Int
       IPv4.new ntoa(addr)
-    when /:.+\./
-      IPv6::Mapped.new addr
     when /\./
       IPv4.new addr
     when /:/

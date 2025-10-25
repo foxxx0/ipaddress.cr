@@ -1,8 +1,9 @@
 name: ipaddress
-version: 0.2.3
+version: 0.3.0
 
 authors:
   - Sijawusz Pur Rahnama <sija@sija.pl>
+  - Thore Bödecker <me [at] foxxx0.de>
 
 development_dependencies:
   ameba:
