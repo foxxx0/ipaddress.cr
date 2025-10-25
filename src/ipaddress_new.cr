@@ -5,7 +5,7 @@ require "./ipaddress/*"
 # ```
 # require "ipaddress"
 # ```
-module IPAddress
+module IPAddressNew
   # `IPAddress.new` is a wrapper method built around
   # IPAddress's library classes. Its purpose is to
   # make you independent from the type of IP address
@@ -36,7 +36,7 @@ module IPAddress
   # ```
   #
   # See also `#parse`
-  def self.new(addr : String | Int) : IPAddress
+  def self.new(addr : String | Int) : IPAddressNew
     parse addr
   end
 
@@ -59,7 +59,7 @@ module IPAddress
   # ```
   #
   # See also `#new`, `#ntoa`
-  def self.parse(addr : String | Int) : IPAddress
+  def self.parse(addr : String | Int) : IPAddressNew
     case addr
     when Int
       IPv4.new ntoa(addr)

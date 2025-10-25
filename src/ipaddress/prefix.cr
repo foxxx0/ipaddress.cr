@@ -1,6 +1,6 @@
 require "big"
 
-module IPAddress
+module IPAddressNew
   # `IPAddress::Prefix` is the parent class for `IPAddress::Prefix32`
   # and `IPAddress::Prefix128`, defining some methods in common for
   # both the subclasses.

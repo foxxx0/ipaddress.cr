@@ -1,6 +1,6 @@
 require "./ipv6"
 
-module IPAddress
+module IPAddressNew
   # The address with all zero bits is called the *unspecified* address
   # (corresponding to `0.0.0.0` in IPv4). It should be something like this:
   #

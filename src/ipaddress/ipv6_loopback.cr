@@ -1,6 +1,6 @@
 require "./ipv6"
 
-module IPAddress
+module IPAddressNew
   # The loopback address is a unicast localhost address. If an
   # application in a host sends packets to this address, the IPv6 stack
   # will loop these packets back on the same virtual interface.

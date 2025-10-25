@@ -1,9 +1,9 @@
 require "./prefix"
 
-module IPAddress
+module IPAddressNew
   # Class `IPAddress::IPv4` is used to handle IPv4 type addresses.
   class IPv4
-    include IPAddress
+    include IPAddressNew
     include Enumerable(IPv4)
     include Comparable(IPv4)
 

@@ -7,7 +7,7 @@ class String
   # "127.0.0.1".to_ip.to_string  # => "127.0.0.1/32"
   # "10.0.0.256".to_ip.to_string # => raises ArgumentError
   # ```
-  def to_ip : IPAddress
+  def to_ip : IPAddressNew
     IPAddress.parse self
   end
 

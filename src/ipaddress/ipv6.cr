@@ -1,6 +1,7 @@
 require "./prefix"
+require "socket"
 
-module IPAddress
+module IPAddressNew
   # Class `IPAddress::IPv6` is used to handle IPv6 type addresses.
   #
   # ## IPv6 addresses
@@ -46,7 +47,7 @@ module IPAddress
   # representing the network portion, and the last 64 bits are the host
   # portion.
   class IPv6
-    include IPAddress
+    include IPAddressNew
     include Enumerable(IPv6)
     include Comparable(IPv6)
 
